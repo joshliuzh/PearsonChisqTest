@@ -1,0 +1,370 @@
+---
+title: "Data Analysis Report on Ebola in Zaire"
+author: "Zhao Liu, Josh"
+date: "February 8, 2017"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Introduction
+
+Ebola, previously known as Ebola hemorrhagic fever, is a rare and deadly disease caused by infection with one of the Ebola virus species. Ebola can cause disease in humans and nonhuman primates (monkeys, gorillas, and chimpanzees). Ebola viruses are found in several African countries. Ebola was first discovered in 1976 near the Ebola River in what is now the Democratic Republic of the Congo (then Zaire) . Because of this, the virus that caused Ebola is scientifically named Zaire Ebolavirus. 
+
+The first outbreak of Ebola in Zaire caught the medical community off guard given its fast spread and deadliness. During a period as short as 55 days (from September 1 to October 24, 1976), as many as 318 cases of acute viral hemorrhagic fever occurred in northern Zaire, of which 280 were killed as a result of the disease.   Medical community and pharmaceutical industry have focuses considerable amount of resources on the research of Ebola ever since, in an attempt to curb fatality caused by Ebola by treating or curing it. In 1995, another major outbreak of Ebola occurred in Zaire, infecting nearly as many as patients as in the outbreak in 1976: 315 cases were reported to the authorities. This time, 254 people were killed.  
+
+In this report, I will analyze the data listed above, i.e. total number of cases reported in each of the two Ebola outbreaks, and the number of deaths that occurred in each outburst. Specifically, my research questions are: 1. Are death rate in the 1995 Ebola outbreak and the death rate in the 1976 outbreak independent? 2. If they are not independent, what is their relationship?
+
+
+### Data
+
+First, I list all data available in this contingency table. As the table shows, total numbers of Ebola cases are 318 and 315, for the 1976 outbreak and the 1995 outbreak, respectively. Of those cases, 280 people died in 1976, and 254 people died in 1995.
+
+
+
+```{r, echo = FALSE}
+datacol <- c("Death", "Non-Death", "Total")
+datarow <- c("1976", "1995", "Total")
+table1 <- matrix(data = c(280, 38, 318, 254, 61, 315, 534, 99, 633), byrow = TRUE, nrow = 3, ncol = 3)
+rownames(table1) <- datarow
+colnames(table1) <- datacol
+table1
+```
+
+Since the total numbers of cases in the two outbreaks are different (although very close), I also list death rate of each outbreak in the table that follows:
+
+```{r, echo = FALSE}
+table2 <- matrix(data = c(280/318, 38/318, 254/315, 61/315,534/633, 99/633), byrow = TRUE, nrow = 3)
+rownames(table2) <- c("1976", "1995", "Overall")
+colnames(table2) <- c("Death Rate", "Non-death Rate")
+round(table2, 4)
+```
+
+The table shows that the death rate in the 1976 outbreak is 88.05%, and the figure for the 1995 outbreak is 80.63%. The overall death rate for the two outbreaks is 84.36%.
+
+The difference between the death rate of 1995 and 1976 is $0.8063 - 0.8805=  `r .8063 - .8805`$. The results tell us the death proportion in 1995 is 0.0742 less than that of 1995. From only the difference, We cannot infer more information.
+
+The relative risk is evaluated as $0.8036 \div 0.8805 =  `r round(0.8036 / 0.8805, 4)`$. It tells us the death rate in 1995 is 91.27% of the death rate in 1976.
+
+Odds ratio is evaulated as $(280\times61)\div(254\times38)=`r round(280*61/38/254, 4)`$. It means for an Ebola patient in 1976, the odds to die is 1.7696 as much as a patient in 1995.
+
+## Model
+
+Since there are only two categories in the response variable (death or non-death), I will assume independent binomial model to test the death rate for the two. There are alternative models that we can use, such as multinomial model and Poisson model. Given the setup of the data, we know that the total number of deaths, which happened in the past, is a set number. Therefore, it is not appropriate to assume Poisson model. 
+
+I will use the following labels to represent data that we already have:
+
+Define year is 1 for 1976, and 2 for 1995.
+Define result is 1 for Death, and 2 for non-Death.
+For the cell in the contingency table, let $n_{ij}, i = 1, 2, j = 1, 2$ represent the number in the cell in Row i and Column j. Row totals are represented by $n_{i+}, i = 1, 2$, and columns totals are represented by $n_{+j}, j = 1, 2$. We use $N$ to denote sample size, which is 633. $
+
+Let $\pi_{j|i}, i =1, 2, j = 1, 2$ represent the theoretical probability, given a subject is in the i-th row, of being in the j-th column. Since there are only two attributes in the response variable, it is clear that $\pi_{1|i} + \pi_{2|i} = 1, i = 1, 2$. Therefore, we only need to know the distribution of $\pi_{1|i}$ to know $\pi_{2|i}$. To further simplify the matter, $\pi_1$ is used to denote given a subject is an Ebola patient in 1976, the probabiliby of death; and $\pi_2$ is used to denote given a subject is an Ebola patient in 1995, the probabiliby of death.   Therefore, in this model, the number in cell (1, 1) $\sim bin(318, \pi_1)$, and the number in cell (2, 1) $\sim bin(315, \pi_2)$. 
+
+Under the null hypothesis $H_0$, Ebola result is independent from which year an outbreak takes place. Therefore, given empirical data, the expected value of the number in cell (1, 1) $$\hat\mu_{11}=E[n_{11}]=N\pi_{11}=N\pi_{1+}\pi_{+1}=N\frac{n_{1+}}N \frac{n_{+1}}N=\frac{n_{1+}n_{+1}}{N}=\frac{318 \times 534}{633}=`r round(318*534/633, 2)`$$
+
+Similarly:
+
+$\hat\mu_{12}=49.73$
+
+$\hat\mu_{21}=265.73$
+
+$\hat\mu_{22}=49.27$
+
+Correspondingly, $\hat\pi_1$ and $\hat\pi_2$ are the estimators of the two probability. Clearly, $\hat\pi_1=n_{11}\div n_{1+}=280\div318=0.8805$, and $\hat\pi_2=n_{21}\div n_{2+}=254\div315=0.8063$
+
+
+```{r, echo = FALSE}
+n11 = 280
+n12 = 38
+n1 = 318
+n21 = 254
+n22 = 61
+n2 = 315
+pi1 = 280/318
+pi2 = 254/315
+u11 = 318*534/633
+u12 = 318*99/633
+u21 = 534*315/633
+u22 = 99*315/633
+```
+
+## Analysis
+
+
+First, we find confidence intervals of the difference of proportions. In this report, confidence intervals are at 95% level unless otherwise specified.
+
+The confidence interval for the difference of proportions is given by
+
+$$(\pi_2-\pi_1)\pm z_{\alpha/2}\sqrt{\frac{\pi_1(1-\pi_1)}{n_{1+}}+\frac{\pi_2(1-\pi_2)}{n_{2+}}}$$
+
+I replace all $\pi$ with $\hat\pi$, and can calculate the confidence interval for the difference between the two proportions is
+
+```{r, echo = FALSE}
+pi2-pi1 + c(-1, 1) * qnorm(.975) * sqrt(pi1*(1-pi1)/n1+pi2*(1-pi2)/n2)
+```
+
+Second, we find the confidence interval of the relative risk. Relative risk is given by $$r=\frac{\hat\pi_2}{\hat\pi_1}$$.
+
+The natural logarithm of $r$ has confidence interval 
+
+$$\ln(r)\pm z_{\alpha/2} \sqrt{\frac{1-\hat\pi_1}{n_{11}} + \frac{1-\hat\pi_2}{n_{21}}}$$
+
+First, we find the lower and upper bounds of the natural logarithm of $r$:
+
+```{r, echo = FALSE}
+r = pi2/pi1
+log(r) + c(-1, 1) * qnorm(.975) * sqrt((1-pi1)/n11+(1-pi2)/n21)
+```
+
+Then we exponentiate the lower and upper bounds, and find the confidence interval for relative risk $r$ is
+
+```{r, echo = FALSE}
+exp(log(r) + c(-1, 1) * qnorm(.975) * sqrt((1-pi1)/n11+(1-pi2)/n21))
+```
+
+Third, we want to find the confidence interval for the odds ratio. Odds ratio is defined as $$\theta = \frac{\pi_1 (1-\pi_2)}{\pi_2 (1-\pi_1)}$$
+
+estimated by
+
+$$\hat\theta = \frac{n_{11}\times n_{22} }{n_{21}\times n_{12}}$$
+
+
+It is said that the natural logarithm of $\theta$, $ln(\theta)$ has the confidence interval of 
+
+$$\ln(\hat\theta) \pm z_{\alpha/2} \sqrt{\frac 1 {n_{11}}+\frac 1 {n_{12}}+\frac 1 {n_{21}}+\frac 1 {n_{22}}}$$
+So we calculate the confidence interval for $\ln(\theta)$, which is 
+
+```{r, echo = FALSE}
+theta = n11*n22/n12/n21
+log(theta) + c(-1, 1) * qnorm(.975) * sqrt(1/n11+1/n12+1/n21+1/n22)
+```
+
+Again, we exponentiate the lower and upper bounds, and get the 95% confidence interval for odds ratio, which is `r exp(log(theta) + c(-1, 1) * qnorm(.975) * sqrt(1/n11+1/n12+1/n21+1/n22))`.
+
+
+As the last step of analysis, I will use Pearson's Chi-Squared and likelihood ratio Chi-Squred test to test independence between $\pi_1$ and $\pi_2$. 
+
+### Pearson's Chi-Squared test
+
+According to Pearson's Chi-Squared test, the test statistic
+
+$$X^2 = \underset i \sum \underset j \sum \frac {(n_{ij} - \hat\mu_{ij})^2} {\hat\mu_{ij}}$$
+
+
+is said to asymptotically follow $\chi^2(I-1)(J-1)$ distribution. Therefore, in my analysis, I calculate the test statistic, and compare its p-value.
+
+```{r, echo = FALSE}
+n <- matrix(data = c(n11, n12, n21, n22), byrow = TRUE, nrow = 2)
+x2test <- chisq.test(n)
+x2test
+
+
+```
+
+P-value is lower than 0.05. Therefore, we reject our hypothesis that the death rate and year of occurrence are independent.
+
+### Likelihood Ratio Chi-Squared test
+
+In likelihood ratio Chi-Squared test, it is said the test statistic, 
+
+$$G^2=2 \underset i \sum \ \underset j \sum n_{ij}\ln \frac {n_{ij}} {\hat\mu_{ij}}$$
+
+
+is also asymptotically follows $\chi^2(I-1)(J-1)$ distribution. 
+
+```{r, echo = FALSE}
+u <- matrix(data = c(u11, u12, u21, u22), byrow = TRUE, nrow = 2)
+G.sq <- 2 * sum(n*log(n/u))
+G.sq
+1 - pchisq(G.sq, df = 1)
+
+
+```
+
+This small p-value also indicates we should reject $H_0$.
+
+Since we reject $H_0$ and conclude there is evidence that the death rate and the years of Ebola outbreak are somehow correlated, we want to see what is the relationship behind the two variables. A follow-up analysis is performed. 
+
+```{r, echo= FALSE}
+residual <- round(x2test$residuals, 2)
+rownames(residual) <- c("1976", "1995")
+colnames(residual) <- c("Death", "Non-death")
+residual
+```
+
+The table shows that a patient in the 1976 Ebola outbreak is more likely to die than a patient in the 1995 outbreak.
+
+## Simulation
+
+### Simulation of Pearson's Chi-Squared Test
+
+In the following simulation, first I generated a sample of size 1000 from $\chi^2$ distribution with degree of freedom of 1. From this singular data set, I draw, with replacement, 25 samples, for 100,000 times. Each time I take out the 95% quantile from the sample, and I got 100,000 95% quantile. Then I compare the distrubtion of the 100,000 95% quantile with the test statistic that was obtained in the previous part.
+
+```{r, echo = FALSE}
+chisq1 <- rchisq(1000,1)
+quantile95 <- c()
+for (i in 1: 100000) {
+  quantile95[i] <- quantile(sample(chisq1, 25, replace = TRUE), .95)
+}
+plot(density(quantile95), xlab = "x", main = "Bootstrap Result")
+abline(v = x2test$statistic, lty = 2)
+1 - mean(x2test$statistic>quantile95)
+```
+
+### Simulation of Likelihood Ratio Chi-Squared Test
+
+In the following simulation, first I generated a sample of size 1000 from $\chi^2$ distribution with degree of freedom of 1. From this singular data set, I draw, with replacement, 25 samples, for 100,000 times. Each time I take out the 95% quantile from the sample, and I got 100,000 95% quantile. Then I compare the distrubtion of the 100,000 95% quantile with the test statistic that was obtained in the previous part.
+
+```{r, echo = FALSE}
+
+chisq1 <- rchisq(1000,1)
+quantile95 <- c()
+for (i in 1: 100000) {
+  quantile95[i] <- quantile(sample(chisq1, 25, replace = TRUE), .95)
+}
+plot(density(quantile95), xlab = "x", main = "Bootstrap Result")
+abline(v = G.sq, lty = 2)
+1 - mean(G.sq>quantile95)
+```
+
+It shows that our test statistic is greater than 97.79% of all samples I got. Therefore, we reject the null hypothesis $H_0$.
+
+## Conclusions
+
+The analysis shows that the death rate in the Ebola outbreaks is not independent from the year of such an outbreak. More specifically, the 1976 Ebola outbreak is more deadly than the 1995 outbreak: A patient who was in the 1976 outbreak is more likely to die than a patient in the 1995 outbreak.
+
+## Appendix
+
+In this part, I listed all codes in this analysis that were used to produce variables, tables, and graphs. Since these codes have been evaluated in previous parts, they are listed below only for displaying purpose.
+
+```{r, eval = FALSE}
+
+## Chunk 1, producing contingency table with marginal totals and joint total
+datacol <- c("Death", "Non-Death", "Total")
+datarow <- c("1976", "1995", "Total")
+table1 <- matrix(data = c(280, 38, 318, 254, 61, 315, 534, 99, 633), byrow = TRUE, nrow = 3, ncol = 3)
+rownames(table1) <- datarow
+colnames(table1) <- datacol
+table1
+
+## Producing tables showing conditional probability of death, given year
+table2 <- matrix(data = c(280/318, 38/318, 254/315, 61/315,534/633, 99/633), byrow = TRUE, nrow = 3)
+rownames(table2) <- c("1976", "1995", "Overall")
+colnames(table2) <- c("Death Rate", "Non-death Rate")
+round(table2, 4)
+
+## variables created for subsequent computation
+n11 = 280
+n12 = 38
+n1 = 318
+n21 = 254
+n22 = 61
+n2 = 315
+pi1 = 280/318
+pi2 = 254/315
+u11 = 318*534/633
+u12 = 318*99/633
+u21 = 534*315/633
+u22 = 99*315/633
+
+## Relative risk confidence interval
+r = pi2/pi1
+log(r) + c(-1, 1) * qnorm(.975) * sqrt((1-pi1)/n11+(1-pi2)/n21)
+exp(log(r) + c(-1, 1) * qnorm(.975) * sqrt((1-pi1)/n11+(1-pi2)/n21))
+
+
+## Odds ratio confidence interval
+theta = pi2/pi1
+log(theta) + c(-1, 1) * qnorm(.975) * sqrt(1/n11+1/n12+1/n21+1/n22)
+
+## Eliminating marginal totals and joint total from table to perform Pearson's Chi-squared test
+table3 <- matrix(data = c(n11, n12, n21, n22), byrow = TRUE, nrow = 2)
+x2test <- chisq.test(table3)
+x2test
+
+## Likelihood Ratio Chi-squared test
+G.sq <- 2 * sum(n*log(n/u))
+G.sq
+1 - pchisq(G.sq, df = 1)
+
+
+## Follow-up analysis
+residual <- round(x2test$residuals, 2)
+rownames(residual) <- c("1976", "1995")
+colnames(residual) <- c("Death", "Non-death")
+
+
+## Pearson's Chi-Squared bootstrapping
+
+chisq1 <- rchisq(1000,1)
+quantile95 <- c()
+for (i in 1: 100000) {
+  quantile95[i] <- quantile(sample(chisq1, 25, replace = TRUE), .95)
+}
+plot(density(quantile95), xlab = "x", main = "Bootstrap Result")
+abline(v = x2test$statistic, lty = 2)
+1 - mean(x2test$statistic>quantile95)
+
+## Likelihood Ratio Chi-Squared bootstrapping
+
+chisq1 <- rchisq(1000,1)
+quantile95 <- c()
+for (i in 1: 100000) {
+  quantile95[i] <- quantile(sample(chisq1, 25, replace = TRUE), .95)
+}
+plot(density(quantile95), xlab = "x", main = "Bootstrap Result")
+abline(v = G.sq, lty = 2)
+1 - mean(G.sq>quantile95)
+```
+
+Bootstrap, Trevor Park's code
+```{r}
+obs.table <- rbind(c(n11, n12), c(n21, n22))
+pihat <- sum(obs.table[,1])/sum(obs.table)
+ns <- apply(obs.table, 1, sum)
+X.sq.obs <- chisq.test(obs.table, correct = FALSE)$statistic
+muhat <- outer(ns, c(pihat, 1-pihat))
+G.sq.obs <- s*sum(obs.table * log(obs.table / muhat))
+Nsim <- 100000
+X.sq.sim <- numeric(Nsim)
+G.sq.sim <- numeric(Nsim)
+
+for (i in 1:Nsim) {
+  y1sim <- rbinom(1, ns[1], pihat)
+  y2sim <- rbinom(1, ns[2], pihat)
+  sim.table <- rbind(c(y1sim, ns[1]-y1sim), 
+                     c(y2sim, ns[2]-y2sim))
+  X.sq.sim[i] <- chisq.test(sim.table, correct = FALSE)$statistic
+  ns.sim <- apply(sim.table, 1, sum)
+  pihat.sim <- sum(sim.table[,1]) / sum(sim.table)
+  muhat.sim <- outer(ns.sim, c(pihat.sim, 1 - pihat.sim))
+  G.sq.sim[i] <- 2 * sum(sim.table * log(sim.table / muhat.sim))
+}
+
+mean(X.sq.sim >= X.sq.obs)
+mean(G.sq.sim >= G.sq.obs)
+
+pdf("empiricalplots.pdf", width = 6, height = 8)
+
+par(mfrow = c(2, 1), cex.axis = .7, cex.lab = .7, cex.main = .8)
+
+hist(X.sq.sim, breaks=50, freq=FALSE, col="grey90", xlab="X-squared Value",
+main="Pearson Statistic Bootstrap Distribution and Chi-Square Reference",
+xlim=c(0,10), ylim=c(0,1))
+
+curve(dchisq(x, df=1), from=0.01, add=TRUE, col="blue")
+
+hist(G.sq.sim, breaks=50, freq=FALSE, col="grey90", xlab="G-squared Value",
+main=paste("Likelihood Ratio Statistic Bootstrap Distribution and",
+"Chi-Square Reference"), xlim=c(0,10), ylim=c(0,1))
+
+curve(dchisq(x, df=1), from=0.01, add=TRUE, col="blue")
+dev.off()
+
+```
+
